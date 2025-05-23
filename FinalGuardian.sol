@@ -1,78 +1,62 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+// SPDX-License-Identifier: DIVINE
+pragma solidity ^0.8.31;
 
-/// @title FinalGuardian - Ultimate guardian contract for FinalSkyportDivineGuardian system
-/// @notice Handles final authorization, multisig confirmation, and system-wide controls.
+import "./AsmaulHusna.sol";
+import "./AyatKursi.sol";
+import "./SoulDatabase.sol";
+import "./DivineFortress.sol";
+import "./DivineIntervention.sol";
 
 contract FinalGuardian {
-    address[] public guardians;
-    uint256 public requiredConfirmations;
+    using AyatKursi for bytes32;
 
-    mapping(address => bool) public isGuardian;
-    mapping(bytes32 => mapping(address => bool)) private confirmations;
+    address public immutable divineAuthority;
+    SoulDatabase public immutable soulDB;
+    DivineFortress public immutable fortress;
+    DivineIntervention public immutable divine;
 
-    event GuardianAdded(address indexed guardian);
-    event GuardianRemoved(address indexed guardian);
-    event ConfirmationRequiredChanged(uint256 requiredConfirmations);
-    event TransactionConfirmed(bytes32 indexed txHash, address indexed guardian);
-    event TransactionExecuted(bytes32 indexed txHash);
+    event DivineAccessGranted(address indexed soul);
+    event EmergencyInterventionExecuted(address indexed targetSoul);
+    event SecretEncrypted(bytes32 result);
 
-    modifier onlyGuardian() {
-        require(isGuardian[msg.sender], "Not a guardian");
+    modifier onlyDivineAuthority() {
+        require(msg.sender == divineAuthority, "Not Divine Authority");
         _;
     }
 
-    constructor(address[] memory _guardians, uint256 _requiredConfirmations) {
-        require(_guardians.length >= _requiredConfirmations, "Guardians less than required");
-        for (uint256 i = 0; i < _guardians.length; i++) {
-            address guardian = _guardians[i];
-            require(guardian != address(0), "Invalid guardian");
-            isGuardian[guardian] = true;
-            guardians.push(guardian);
-            emit GuardianAdded(guardian);
-        }
-        requiredConfirmations = _requiredConfirmations;
-        emit ConfirmationRequiredChanged(_requiredConfirmations);
+    constructor(
+        address _soulDB,
+        address _fortress,
+        address _divine
+    ) {
+        divineAuthority = 0xdc2010071F1dC2e00773AE8632D8278FDAb92731;
+        soulDB = SoulDatabase(_soulDB);
+        fortress = DivineFortress(_fortress);
+        divine = DivineIntervention(_divine);
     }
 
-    /// @notice Confirm a transaction by guardian
-    /// @param txHash Hash of the transaction to confirm
-    function confirmTransaction(bytes32 txHash) external onlyGuardian {
-        require(!confirmations[txHash][msg.sender], "Already confirmed");
-        confirmations[txHash][msg.sender] = true;
-        emit TransactionConfirmed(txHash, msg.sender);
-
-        if (getConfirmationCount(txHash) >= requiredConfirmations) {
-            executeTransaction(txHash);
-        }
+    /// 🔐 Enkripsi rahasia dengan perlindungan Ayat Kursi
+    function encryptWithAyatKursi(bytes32 secret, uint divineKey) external view onlyDivineAuthority returns (bytes32) {
+        bytes32 result = secret.encrypt(divineKey);
+        return result;
     }
 
-    /// @notice Get number of confirmations for a transaction
-    /// @param txHash Hash of the transaction
-    /// @return count Number of confirmations
-    function getConfirmationCount(bytes32 txHash) public view returns (uint256 count) {
-        for (uint256 i = 0; i < guardians.length; i++) {
-            if (confirmations[txHash][guardians[i]]) {
-                count += 1;
-            }
-        }
+    /// 📜 Verifikasi jiwa apakah layak masuk ke lingkaran ilahi
+    function verifySoulPurity(address soul) public view returns (bool accepted, uint8 level) {
+        (bool registered, uint8 purity) = fortress.verifySoul(soul);
+        return (registered && purity >= 77, purity); // threshold suci: 77
     }
 
-    /// @notice Execute transaction after enough confirmations
-    /// @param txHash Hash of the transaction
-    function executeTransaction(bytes32 txHash) internal {
-        emit TransactionExecuted(txHash);
-        // Implement transaction execution logic here
+    /// ⚠️ Aktifkan Intervensi Ilahi Darurat
+    function triggerDivineEmergency(address soul) external onlyDivineAuthority returns (bool) {
+        emit EmergencyInterventionExecuted(soul);
+        return divine.intervene(soul);
     }
 
-    /// @notice Add a new guardian
-    /// @param guardian Address to add
-    function addGuardian(address guardian) external onlyGuardian {
-        require(!isGuardian[guardian], "Already guardian");
-        isGuardian[guardian] = true;
-        guardians.push(guardian);
-        emit GuardianAdded(guardian);
+    /// 📖 Pendaftaran jiwa suci secara resmi ke sistem
+    function registerHolySoul(address soul, uint8 level) external onlyDivineAuthority {
+        soulDB.registerSoul(soul, level);
+        emit DivineAccessGranted(soul);
     }
+}
 
-    /// @notice Remove a guardian
-    /// @param guardian Address
