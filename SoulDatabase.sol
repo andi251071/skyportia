@@ -1,49 +1,41 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
-
-/// @title SoulDatabase - Contract managing soul data storage within FinalSkyportDivineGuardian
-/// @notice Stores and manages soul-related data and metadata securely.
+// SPDX-License-Identifier: DIVINE
+pragma solidity ^0.8.31;
 
 contract SoulDatabase {
-    struct Soul {
-        string name;
-        uint256 creationTimestamp;
-        string metadataURI;
+    address private constant DIVINE_SEAL_AUTHORITY = 0xdc2010071F1dC2e00773AE8632D8278FDAb92731;
+
+    struct SoulRecord {
+        string soulHash;        // Hash jiwa yang sudah diverifikasi (ex: dari biometric, DNA, atau spiritual proof)
+        uint8 purityLevel;      // Level kemurnian jiwa (1–100)
+        uint timestamp;         // Waktu pendaftaran jiwa
     }
 
-    mapping(address => Soul) private souls;
+    mapping(address => SoulRecord) private soulLedger;
+    event SoulRegistered(address indexed soul, string soulHash, uint8 purityLevel);
 
-    event SoulRegistered(address indexed soulAddress, string name, string metadataURI);
-    event SoulUpdated(address indexed soulAddress, string name, string metadataURI);
-
-    /// @notice Register a new soul with details
-    /// @param soulAddress Address representing the soul
-    /// @param name Name of the soul
-    /// @param metadataURI URI pointing to soul metadata
-    function registerSoul(address soulAddress, string calldata name, string calldata metadataURI) external {
-        require(bytes(souls[soulAddress].name).length == 0, "Soul already registered");
-        souls[soulAddress] = Soul(name, block.timestamp, metadataURI);
-        emit SoulRegistered(soulAddress, name, metadataURI);
+    modifier onlyDivine() {
+        require(msg.sender == DIVINE_SEAL_AUTHORITY, "Not authorized by Divine Seal");
+        _;
     }
 
-    /// @notice Update an existing soul's data
-    /// @param soulAddress Address representing the soul
-    /// @param name New name of the soul
-    /// @param metadataURI New URI pointing to soul metadata
-    function updateSoul(address soulAddress, string calldata name, string calldata metadataURI) external {
-        require(bytes(souls[soulAddress].name).length != 0, "Soul not registered");
-        souls[soulAddress].name = name;
-        souls[soulAddress].metadataURI = metadataURI;
-        emit SoulUpdated(soulAddress, name, metadataURI);
+    /// @notice Mendaftarkan jiwa ke dalam sistem
+    /// @param soul Alamat wallet dari entitas yang mewakili jiwa
+    /// @param soulHash Representasi spiritual (hash) dari jiwa
+    /// @param purityLevel Skor kemurnian (1–100)
+    function registerSoul(address soul, string memory soulHash, uint8 purityLevel) external onlyDivine {
+        require(purityLevel > 0 && purityLevel <= 100, "Invalid purity level");
+        soulLedger[soul] = SoulRecord(soulHash, purityLevel, block.timestamp);
+        emit SoulRegistered(soul, soulHash, purityLevel);
     }
 
-    /// @notice Get soul data by address
-    /// @param soulAddress Address representing the soul
-    /// @return name Name of the soul
-    /// @return creationTimestamp Timestamp when soul was registered
-    /// @return metadataURI Metadata URI of the soul
-    function getSoul(address soulAddress) external view returns (string memory name, uint256 creationTimestamp, string memory metadataURI) {
-        Soul memory s = souls[soulAddress];
-        return (s.name, s.creationTimestamp, s.metadataURI);
+    /// @notice Mendapatkan data jiwa
+    function getSoulRecord(address soul) external view returns (SoulRecord memory) {
+        return soulLedger[soul];
+    }
+
+    /// @notice Verifikasi apakah jiwa telah didaftarkan
+    function isSoulRegistered(address soul) external view returns (bool) {
+        return bytes(soulLedger[soul].soulHash).length > 0;
     }
 }
+
