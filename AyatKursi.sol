@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: DIVINE
 pragma solidity ^0.8.31;
 
+/// @title AyatKursi Library – Spiritual Encryption for Skyportia
+/// @author DivineTech
+/// @notice Menggunakan kekuatan Ayat Kursi untuk proteksi rahasia dan validasi otoritas ilahi
+
 library AyatKursi {
     address private constant DIVINE_SEAL_AUTHORITY = 0xdc2010071F1dC2e00773AE8632D8278FDAb92731;
 
@@ -24,3 +28,4 @@ library AyatKursi {
         return keccak256(zikir) == keccak256("Allahu la ilaha illa Huwa".bytes);
     }
 }
+
