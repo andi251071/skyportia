@@ -1,69 +1,46 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+// SPDX-License-Identifier: DIVINE
+pragma solidity ^0.8.31;
 
-/// @title DivineFortress - Main security fortress contract for FinalSkyportDivineGuardian system
-/// @notice Implements layered security, guardian roles, and emergency protocols.
+import "./AsmaulHusna.sol";
+import "./AyatKursi.sol";
+import "./SoulDatabase.sol";
+import "./DivineIntervention.sol";
 
 contract DivineFortress {
-    address public owner;
-    mapping(address => bool) public guardians;
-    bool public emergencyLock;
+    using AyatKursi for bytes32;
 
-    event GuardianAdded(address indexed guardian);
-    event GuardianRemoved(address indexed guardian);
-    event EmergencyLockActivated();
-    event EmergencyLockDeactivated();
+    address private constant DIVINE_SEAL_AUTHORITY = 0xdc2010071F1dC2e00773AE8632D8278FDAb92731;
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only owner");
+    SoulDatabase private soulDB;
+    DivineIntervention private divine;
+
+    constructor(address _soulDB, address _divine) {
+        soulDB = SoulDatabase(_soulDB);
+        divine = DivineIntervention(_divine);
+    }
+
+    modifier onlyDivineAuthority() {
+        require(msg.sender == DIVINE_SEAL_AUTHORITY, "Unauthorized access to Divine Fortress");
         _;
     }
 
-    modifier onlyGuardian() {
-        require(guardians[msg.sender], "Only guardian");
-        _;
+    /// @notice Aktivasi perlindungan Ayat Kursi terhadap serangan spiritual atau digital
+    function activateAyatKursiProtection(bytes32 secret, uint divineKey) external view onlyDivineAuthority returns (bytes32) {
+        return secret.encrypt(divineKey);
     }
 
-    modifier notEmergency() {
-        require(!emergencyLock, "Emergency lock active");
-        _;
+    /// @notice Mengintervensi keadaan darurat dengan kekuatan Ilahiah
+    function emergencyDivineCall(address targetSoul) external onlyDivineAuthority returns (bool) {
+        return divine.intervene(targetSoul);
     }
 
-    constructor() {
-        owner = msg.sender;
-        guardians[msg.sender] = true;
-        emergencyLock = false;
-    }
-
-    /// @notice Add a guardian
-    /// @param guardian Address to add as guardian
-    function addGuardian(address guardian) external onlyOwner {
-        guardians[guardian] = true;
-        emit GuardianAdded(guardian);
-    }
-
-    /// @notice Remove a guardian
-    /// @param guardian Address to remove
-    function removeGuardian(address guardian) external onlyOwner {
-        guardians[guardian] = false;
-        emit GuardianRemoved(guardian);
-    }
-
-    /// @notice Activate emergency lock
-    function activateEmergencyLock() external onlyGuardian {
-        emergencyLock = true;
-        emit EmergencyLockActivated();
-    }
-
-    /// @notice Deactivate emergency lock
-    function deactivateEmergencyLock() external onlyOwner {
-        emergencyLock = false;
-        emit EmergencyLockDeactivated();
-    }
-
-    /// @notice Transfer ownership to a new address
-    /// @param newOwner New owner address
-    function transferOwnership(address newOwner) external onlyOwner {
-        owner = newOwner;
+    /// @notice Verifikasi jiwa yang mendaftar ke dalam sistem
+    function verifySoul(address soul) external view returns (bool registered, uint8 purity) {
+        if (soulDB.isSoulRegistered(soul)) {
+            SoulDatabase.SoulRecord memory record = soulDB.getSoulRecord(soul);
+            return (true, record.purityLevel);
+        }
+        return (false, 0);
     }
 }
+
