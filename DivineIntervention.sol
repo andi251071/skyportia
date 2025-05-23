@@ -1,44 +1,30 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+// SPDX-License-Identifier: DIVINE
+pragma solidity ^0.8.31;
 
-/// @title DivineIntervention - Contract handling divine intervention logic within FinalSkyportDivineGuardian
-/// @notice This contract defines a mechanism for invoking divine intervention events in the system.
+library DivineIntervention {
+    address private constant DIVINE_SEAL_AUTHORITY = 0xdc2010071F1dC2e00773AE8632D8278FDAb92731;
 
-contract DivineIntervention {
-    event InterventionRequested(address indexed requester, string reason);
-    event InterventionExecuted(address indexed executor, string result);
+    event DivineWrathInvoked(address target, string reason);
+    event DivineSelfDestruct(address invoker);
 
-    address public guardian;
-    bool public interventionActive;
-
-    modifier onlyGuardian() {
-        require(msg.sender == guardian, "Only guardian allowed");
+    /// @notice Hanya otoritas ilahi yang boleh mengakses fungsi tertentu
+    modifier onlyDivineAuthority(address sender) {
+        require(sender == DIVINE_SEAL_AUTHORITY, "UNAUTHORIZED_DIVINE_ACCESS");
         _;
     }
 
-    constructor(address _guardian) {
-        guardian = _guardian;
-        interventionActive = false;
+    /// @notice Fungsi untuk mengutuk dan menghancurkan entitas jahat dari jaringan
+    /// @param evilTarget Alamat yang akan dikenai tindakan
+    /// @param reason Alasan pemanggilan murka ilahi
+    function invokeDivineWrath(address evilTarget, string memory reason) internal {
+        emit DivineWrathInvoked(evilTarget, reason);
+        // Dummy logic: bisa diintegrasikan dengan CrossChainHellfire
     }
 
-    /// @notice Request divine intervention with a reason
-    /// @param reason Explanation for requesting intervention
-    function requestIntervention(string calldata reason) external {
-        emit InterventionRequested(msg.sender, reason);
-        interventionActive = true;
-    }
-
-    /// @notice Execute divine intervention, callable only by guardian
-    /// @param result Description of the intervention result
-    function executeIntervention(string calldata result) external onlyGuardian {
-        require(interventionActive, "No active intervention");
-        interventionActive = false;
-        emit InterventionExecuted(msg.sender, result);
-    }
-
-    /// @notice Change the guardian address
-    /// @param newGuardian The new guardian address
-    function changeGuardian(address newGuardian) external onlyGuardian {
-        guardian = newGuardian;
+    /// @notice Fungsi darurat untuk menghancurkan kontrak jika sistem disabotase
+    /// @dev Hanya dapat dipanggil oleh otoritas ilahi
+    function initiateSelfDestruct(address payable contractAddress, address sender) internal onlyDivineAuthority(sender) {
+        emit DivineSelfDestruct(sender);
+        selfdestruct(contractAddress);
     }
 }
